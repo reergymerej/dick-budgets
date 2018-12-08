@@ -23,11 +23,11 @@ init =
     { items =
         [ { id = "0"
           , name = "Foo"
-          , cost = 1.99
+          , cost = 100
           }
         , { id = "1"
           , name = "Bar"
-          , cost = 19.5
+          , cost = 240
           }
         ]
     }
@@ -106,11 +106,14 @@ toClassList string =
 
 viewBugetItem : BudgetItem -> Html Msg
 viewBugetItem item =
-    div []
+    div
+        [ toClassList "p-4"
+        ]
         [ input
             [ value item.name
             , placeholder "Name"
             , onInput (ChangeItemName item)
+            , toClassList "outline-none"
             ]
             []
         , input
@@ -125,10 +128,12 @@ viewBugetItem item =
                         Just float ->
                             ChangeItemCost item float
                 )
+            , toClassList "outline-none"
             ]
             []
         , button
             [ onClick (DeleteItem item)
+            , toClassList "bg-pink-dark font-bold p-1 rounded text-white text-sm w-5"
             ]
             [ text "X" ]
         ]
@@ -136,7 +141,9 @@ viewBugetItem item =
 
 viewBugetItems : Model -> Html Msg
 viewBugetItems model =
-    div []
+    div
+        [ toClassList "border-b mb-4"
+        ]
         (List.map
             (\item -> viewBugetItem item)
             model.items
@@ -151,7 +158,7 @@ view model =
         [ viewBugetItems model
         , button
             [ onClick AddItem
-            , toClassList "bg-green font-bold px-4 py-2 rounded text-white"
+            , toClassList "bg-indigo font-bold px-4 py-2 rounded text-white"
             ]
             [ text "Add" ]
         , div []
