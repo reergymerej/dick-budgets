@@ -1,0 +1,153 @@
+module Main exposing (main)
+
+import Browser
+import Html exposing (..)
+import Html.Attributes exposing (..)
+import Html.Events exposing (..)
+
+
+type alias BudgetItem =
+    { id : String
+    , name : String
+    , cost : Float
+    }
+
+
+type alias Model =
+    { items : List BudgetItem
+    }
+
+
+init : Model
+init =
+    { items =
+        [ { id = "0"
+          , name = "Foo"
+          , cost = 1.99
+          }
+        , { id = "1"
+          , name = "Bar"
+          , cost = 19.5
+          }
+        ]
+    }
+
+
+type Msg
+    = AddItem
+    | ChangeItemName BudgetItem String
+    | ChangeItemCost BudgetItem Float
+    | DeleteItem BudgetItem
+
+
+updateItem : String -> (BudgetItem -> BudgetItem) -> List BudgetItem -> List BudgetItem
+updateItem id getNewItem list =
+    List.map
+        (\x ->
+            if x.id == id then
+                getNewItem x
+
+            else
+                x
+        )
+        list
+
+
+update : Msg -> Model -> Model
+update msg model =
+    case msg of
+        AddItem ->
+            let
+                item =
+                    { id = String.fromInt (List.length model.items)
+                    , name = ""
+                    , cost = 0.0
+                    }
+            in
+            { model
+                | items = model.items ++ [ item ]
+            }
+
+        ChangeItemName item value ->
+            let
+                newItems =
+                    updateItem item.id (\x -> { x | name = value }) model.items
+            in
+            { model | items = newItems }
+
+        ChangeItemCost item cost ->
+            let
+                newItems =
+                    updateItem item.id (\x -> { x | cost = cost }) model.items
+            in
+            { model | items = newItems }
+
+        DeleteItem item ->
+            { model | items = List.filter (\x -> item /= x) model.items }
+
+
+viewBugetItem : BudgetItem -> Html Msg
+viewBugetItem item =
+    div []
+        [ input
+            [ value item.name
+            , placeholder "Name"
+            , onInput (ChangeItemName item)
+            ]
+            []
+        , input
+            [ value (String.fromFloat item.cost)
+            , placeholder "Cost"
+            , onInput
+                (\val ->
+                    case String.toFloat val of
+                        Nothing ->
+                            ChangeItemCost item item.cost
+
+                        Just float ->
+                            ChangeItemCost item float
+                )
+            ]
+            []
+        , button
+            [ onClick (DeleteItem item)
+            ]
+            [ text "X" ]
+        ]
+
+
+viewBugetItems : Model -> Html Msg
+viewBugetItems model =
+    div []
+        (List.map
+            (\item -> viewBugetItem item)
+            model.items
+        )
+
+
+view : Model -> Html Msg
+view model =
+    div []
+        [ viewBugetItems model
+        , button
+            [ onClick AddItem ]
+            [ text "Add" ]
+        , div []
+            [ text
+                (String.fromFloat
+                    (List.foldl
+                        (\current accumulator -> current.cost + accumulator)
+                        0
+                        model.items
+                    )
+                )
+            ]
+        ]
+
+
+main =
+    Browser.sandbox
+        { init = init
+        , update = update
+        , view = view
+        }
