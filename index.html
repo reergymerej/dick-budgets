@@ -1,0 +1,19 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Dick Buget</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss/dist/tailwind.min.css" rel="stylesheet">
+  <script src="bin/index.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script>
+    (() => {
+      const app = Elm.Main.init({
+        node: document.getElementById('root'),
+      })
+    })()
+  </script>
+</body>
+</html>

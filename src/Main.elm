@@ -69,21 +69,39 @@ update msg model =
             }
 
         ChangeItemName item value ->
-            let
-                newItems =
-                    updateItem item.id (\x -> { x | name = value }) model.items
-            in
-            { model | items = newItems }
+            { model
+                | items =
+                    updateItem
+                        item.id
+                        (\x -> { x | name = value })
+                        model.items
+            }
 
         ChangeItemCost item cost ->
-            let
-                newItems =
-                    updateItem item.id (\x -> { x | cost = cost }) model.items
-            in
-            { model | items = newItems }
+            { model
+                | items =
+                    updateItem
+                        item.id
+                        (\x -> { x | cost = cost })
+                        model.items
+            }
 
         DeleteItem item ->
-            { model | items = List.filter (\x -> item /= x) model.items }
+            { model
+                | items =
+                    List.filter
+                        (\x -> item /= x)
+                        model.items
+            }
+
+
+toClassList : String -> Attribute Msg
+toClassList string =
+    classList
+        (List.map
+            (\x -> ( x, True ))
+            (String.words string)
+        )
 
 
 viewBugetItem : BudgetItem -> Html Msg
@@ -127,10 +145,14 @@ viewBugetItems model =
 
 view : Model -> Html Msg
 view model =
-    div []
+    div
+        [ toClassList "font-mono"
+        ]
         [ viewBugetItems model
         , button
-            [ onClick AddItem ]
+            [ onClick AddItem
+            , toClassList "bg-green font-bold px-4 py-2 rounded text-white"
+            ]
             [ text "Add" ]
         , div []
             [ text

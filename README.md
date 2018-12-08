@@ -1,5 +1,5 @@
 ## build
 
 ```
-elm make src/Main.elm --output=bin/index.html
+elm make src/Main.elm --output=bin/index.js
 ```
