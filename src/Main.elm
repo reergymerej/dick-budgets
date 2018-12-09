@@ -176,34 +176,20 @@ viewBugetItem item =
         ]
 
 
-viewCommitedBudgetItem : BudgetItem -> Html Msg
-viewCommitedBudgetItem item =
+viewCommitedBudgetItem : BudgetItem -> List Transaction -> Html Msg
+viewCommitedBudgetItem item transactions =
     viewRow
-        [ input
-            [ value item.name
-            , placeholder "Name"
-            , onInput (ChangeItemName item)
-            , toClassList "outline-none w-full"
-            ]
+        [ div
             []
+            [ text item.name ]
         ]
-        [ input
-            [ value (String.fromInt item.cost)
-            , placeholder "Cost"
-            , onInput
-                (\val ->
-                    case String.toInt val of
-                        Nothing ->
-                            ChangeItemCost item item.cost
-
-                        Just int ->
-                            ChangeItemCost item int
-                )
-            , toClassList "outline-none w-full text-right"
-            ]
+        [ div
             []
+            [ text (String.fromInt item.cost) ]
         ]
-        []
+        [ div []
+            [ text (String.fromInt (List.length transactions)) ]
+        ]
 
 
 sumItems : List BudgetItem -> Int
@@ -247,13 +233,24 @@ viewUncommitted model =
         ]
 
 
+transactionsFor : List Transaction -> BudgetItem -> List Transaction
+transactionsFor transactions budgetItem =
+    List.filter (\x -> x.budgetItemId == budgetItem.id) transactions
+
+
 viewCommitted : Model -> Html Msg
 viewCommitted model =
+    let
+        getTransactions =
+            transactionsFor model.transactions
+    in
     div []
         [ div
             []
             (List.map
-                (\item -> viewCommitedBudgetItem item)
+                (\item ->
+                    viewCommitedBudgetItem item (getTransactions item)
+                )
                 model.items
             )
         ]
