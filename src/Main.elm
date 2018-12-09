@@ -41,8 +41,8 @@ init =
         , { id = "1", budgetItemId = "0", cost = 20 }
         , { id = "2", budgetItemId = "0", cost = 30 }
         , { id = "3", budgetItemId = "1", cost = 12 }
-        , { id = "4", budgetItemId = "2", cost = 30 }
-        , { id = "5", budgetItemId = "2", cost = 35 }
+        , { id = "4", budgetItemId = "3", cost = 30 }
+        , { id = "5", budgetItemId = "3", cost = 35 }
         ]
     }
 
@@ -131,14 +131,22 @@ viewCell content =
         content
 
 
-viewRow : List (Html Msg) -> List (Html Msg) -> List (Html Msg) -> Html Msg
-viewRow a b c =
+viewRow : List (Html Msg) -> Html Msg
+viewRow cells =
     div
         [ toClassList "flex" ]
-        [ viewCell a
-        , viewCell b
-        , viewCell c
-        ]
+        (List.map
+            (\x -> viewCell [ x ])
+            cells
+        )
+
+
+viewRow3 : List (Html Msg) -> List (Html Msg) -> List (Html Msg) -> Html Msg
+viewRow3 a b c =
+    viewRow3
+        a
+        b
+        c
 
 
 viewBugetItem : BudgetItem -> Html Msg
@@ -151,8 +159,7 @@ viewBugetItem item =
             , toClassList "outline-none w-full"
             ]
             []
-        ]
-        [ input
+        , input
             [ value (String.fromInt item.cost)
             , placeholder "Cost"
             , onInput
@@ -167,8 +174,7 @@ viewBugetItem item =
             , toClassList "outline-none w-full text-right"
             ]
             []
-        ]
-        [ button
+        , button
             [ onClick (DeleteItem item)
             , toClassList "text-red-light font-bold p-1 px-2 rounded text-sm"
             ]
@@ -178,18 +184,24 @@ viewBugetItem item =
 
 viewCommitedBudgetItem : BudgetItem -> List Transaction -> Html Msg
 viewCommitedBudgetItem item transactions =
+    let
+        transCols =
+            List.map
+                (\x ->
+                    div [] [ text (String.fromInt x.cost) ]
+                )
+                transactions
+    in
     viewRow
-        [ div
+        ([ div
             []
             [ text item.name ]
-        ]
-        [ div
+         , div
             []
             [ text (String.fromInt item.cost) ]
-        ]
-        [ div []
-            [ text (String.fromInt (List.length transactions)) ]
-        ]
+         ]
+            ++ transCols
+        )
 
 
 sumItems : List BudgetItem -> Int
@@ -210,7 +222,7 @@ viewUncommitted model =
                 (\item -> viewBugetItem item)
                 model.items
             )
-        , viewRow
+        , viewRow3
             [ button
                 [ onClick AddItem
                 , toClassList "bg-green-light font-bold px-4 py-2 rounded text-white"
