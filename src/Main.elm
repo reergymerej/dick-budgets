@@ -15,6 +15,7 @@ type alias BudgetItem =
 
 type alias Model =
     { items : List BudgetItem
+    , commited : Bool
     }
 
 
@@ -30,6 +31,7 @@ init =
           , cost = 240
           }
         ]
+    , commited = False
     }
 
 
@@ -38,6 +40,7 @@ type Msg
     | ChangeItemName BudgetItem String
     | ChangeItemCost BudgetItem Int
     | DeleteItem BudgetItem
+    | Commit
 
 
 updateItem : String -> (BudgetItem -> BudgetItem) -> List BudgetItem -> List BudgetItem
@@ -93,6 +96,11 @@ update msg model =
                         (\x -> item /= x)
                         model.items
             }
+
+        -- TODO: Remove empty rows
+        -- TODO: Validate rows
+        Commit ->
+            { model | commited = True }
 
 
 toClassList : String -> Attribute Msg
@@ -164,8 +172,8 @@ sumItems items =
         items
 
 
-view : Model -> Html Msg
-view model =
+viewUncommitted : Model -> Html Msg
+viewUncommitted model =
     div
         [ toClassList "font-mono p-4" ]
         [ div
@@ -188,8 +196,22 @@ view model =
                     )
                 ]
             ]
-            []
+            [ button
+                [ onClick Commit
+                , toClassList "bg-indigo font-bold px-4 py-2 rounded text-white"
+                ]
+                [ text "Commit" ]
+            ]
         ]
+
+
+view : Model -> Html Msg
+view model =
+    if not model.commited then
+        viewUncommitted model
+
+    else
+        div [] [ text "committed" ]
 
 
 main =
