@@ -185,11 +185,15 @@ viewBugetItem item =
 viewCommitedBudgetItem : BudgetItem -> List Transaction -> Html Msg
 viewCommitedBudgetItem item transactions =
     let
+        transSum =
+            List.foldl
+                (\x acc -> x + acc)
+                0
+                (List.map .cost transactions)
+
         transCols =
             List.map
-                (\x ->
-                    div [] [ text (String.fromInt x.cost) ]
-                )
+                (\x -> div [] [ text (String.fromInt x.cost) ])
                 transactions
     in
     viewRow
@@ -199,6 +203,9 @@ viewCommitedBudgetItem item transactions =
          , div
             []
             [ text (String.fromInt item.cost) ]
+         , div
+            []
+            [ text (String.fromInt transSum) ]
          ]
             ++ transCols
         )
