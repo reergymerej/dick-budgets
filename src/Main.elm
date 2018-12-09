@@ -9,7 +9,7 @@ import Html.Events exposing (..)
 type alias BudgetItem =
     { id : String
     , name : String
-    , cost : Float
+    , cost : Int
     }
 
 
@@ -36,7 +36,7 @@ init =
 type Msg
     = AddItem
     | ChangeItemName BudgetItem String
-    | ChangeItemCost BudgetItem Float
+    | ChangeItemCost BudgetItem Int
     | DeleteItem BudgetItem
 
 
@@ -61,7 +61,7 @@ update msg model =
                 item =
                     { id = String.fromInt (List.length model.items)
                     , name = ""
-                    , cost = 0.0
+                    , cost = 0
                     }
             in
             { model
@@ -104,73 +104,91 @@ toClassList string =
         )
 
 
+viewCell : List (Html Msg) -> Html Msg
+viewCell content =
+    div
+        [ toClassList "w-32 p-3" ]
+        content
+
+
+viewRow : List (Html Msg) -> List (Html Msg) -> List (Html Msg) -> Html Msg
+viewRow a b c =
+    div
+        [ toClassList "flex" ]
+        [ viewCell a
+        , viewCell b
+        , viewCell c
+        ]
+
+
 viewBugetItem : BudgetItem -> Html Msg
 viewBugetItem item =
-    div
-        [ toClassList "p-4"
-        ]
+    viewRow
         [ input
             [ value item.name
             , placeholder "Name"
             , onInput (ChangeItemName item)
-            , toClassList "outline-none"
+            , toClassList "outline-none w-full"
             ]
             []
-        , input
-            [ value (String.fromFloat item.cost)
+        ]
+        [ input
+            [ value (String.fromInt item.cost)
             , placeholder "Cost"
             , onInput
                 (\val ->
-                    case String.toFloat val of
+                    case String.toInt val of
                         Nothing ->
                             ChangeItemCost item item.cost
 
-                        Just float ->
-                            ChangeItemCost item float
+                        Just int ->
+                            ChangeItemCost item int
                 )
-            , toClassList "outline-none"
+            , toClassList "outline-none w-full text-right"
             ]
             []
-        , button
+        ]
+        [ button
             [ onClick (DeleteItem item)
-            , toClassList "bg-pink-dark font-bold p-1 rounded text-white text-sm w-5"
+            , toClassList "text-red-light font-bold p-1 px-2 rounded text-sm"
             ]
-            [ text "X" ]
+            [ text "Remove" ]
         ]
 
 
-viewBugetItems : Model -> Html Msg
-viewBugetItems model =
-    div
-        [ toClassList "border-b mb-4"
-        ]
-        (List.map
-            (\item -> viewBugetItem item)
-            model.items
-        )
+sumItems : List BudgetItem -> Int
+sumItems items =
+    List.foldl
+        (\current accumulator -> current.cost + accumulator)
+        0
+        items
 
 
 view : Model -> Html Msg
 view model =
     div
-        [ toClassList "font-mono"
-        ]
-        [ viewBugetItems model
-        , button
-            [ onClick AddItem
-            , toClassList "bg-indigo font-bold px-4 py-2 rounded text-white"
+        [ toClassList "font-mono p-4" ]
+        [ div
+            []
+            (List.map
+                (\item -> viewBugetItem item)
+                model.items
+            )
+        , viewRow
+            [ button
+                [ onClick AddItem
+                , toClassList "bg-green-light font-bold px-4 py-2 rounded text-white"
+                ]
+                [ text "Add" ]
             ]
-            [ text "Add" ]
-        , div []
-            [ text
-                (String.fromFloat
-                    (List.foldl
-                        (\current accumulator -> current.cost + accumulator)
-                        0
-                        model.items
+            [ div [ toClassList "text-right text-xl" ]
+                [ text
+                    (String.fromInt
+                        (sumItems model.items)
                     )
-                )
+                ]
             ]
+            []
         ]
 
 
