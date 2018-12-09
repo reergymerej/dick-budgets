@@ -13,25 +13,37 @@ type alias BudgetItem =
     }
 
 
+type alias Transaction =
+    { id : String
+    , budgetItemId : String
+    , cost : Int
+    }
+
+
 type alias Model =
     { items : List BudgetItem
     , commited : Bool
+    , transactions : List Transaction
     }
 
 
 init : Model
 init =
     { items =
-        [ { id = "0"
-          , name = "Foo"
-          , cost = 100
-          }
-        , { id = "1"
-          , name = "Bar"
-          , cost = 240
-          }
+        [ { id = "0", name = "XYZ", cost = 100 }
+        , { id = "1", name = "ABC", cost = 24 }
+        , { id = "2", name = "FOO", cost = 155 }
+        , { id = "3", name = "BAR", cost = 30 }
         ]
-    , commited = False
+    , commited = True
+    , transactions =
+        [ { id = "0", budgetItemId = "0", cost = 50 }
+        , { id = "1", budgetItemId = "0", cost = 20 }
+        , { id = "2", budgetItemId = "0", cost = 30 }
+        , { id = "3", budgetItemId = "1", cost = 12 }
+        , { id = "4", budgetItemId = "2", cost = 30 }
+        , { id = "5", budgetItemId = "2", cost = 35 }
+        ]
     }
 
 
@@ -164,6 +176,36 @@ viewBugetItem item =
         ]
 
 
+viewCommitedBudgetItem : BudgetItem -> Html Msg
+viewCommitedBudgetItem item =
+    viewRow
+        [ input
+            [ value item.name
+            , placeholder "Name"
+            , onInput (ChangeItemName item)
+            , toClassList "outline-none w-full"
+            ]
+            []
+        ]
+        [ input
+            [ value (String.fromInt item.cost)
+            , placeholder "Cost"
+            , onInput
+                (\val ->
+                    case String.toInt val of
+                        Nothing ->
+                            ChangeItemCost item item.cost
+
+                        Just int ->
+                            ChangeItemCost item int
+                )
+            , toClassList "outline-none w-full text-right"
+            ]
+            []
+        ]
+        []
+
+
 sumItems : List BudgetItem -> Int
 sumItems items =
     List.foldl
@@ -175,7 +217,7 @@ sumItems items =
 viewUncommitted : Model -> Html Msg
 viewUncommitted model =
     div
-        [ toClassList "font-mono p-4" ]
+        []
         [ div
             []
             (List.map
@@ -205,13 +247,28 @@ viewUncommitted model =
         ]
 
 
+viewCommitted : Model -> Html Msg
+viewCommitted model =
+    div []
+        [ div
+            []
+            (List.map
+                (\item -> viewCommitedBudgetItem item)
+                model.items
+            )
+        ]
+
+
 view : Model -> Html Msg
 view model =
-    if not model.commited then
-        viewUncommitted model
+    div
+        [ toClassList "font-mono p-4" ]
+        [ if not model.commited then
+            viewUncommitted model
 
-    else
-        div [] [ text "committed" ]
+          else
+            viewCommitted model
+        ]
 
 
 main =
