@@ -35,7 +35,7 @@ init =
         , { id = "2", name = "FOO", cost = 155 }
         , { id = "3", name = "BAR", cost = 30 }
         ]
-    , commited = True
+    , commited = False
     , transactions =
         [ { id = "0", budgetItemId = "0", cost = 50 }
         , { id = "1", budgetItemId = "0", cost = 20 }
@@ -141,14 +141,6 @@ viewRow cells =
         )
 
 
-viewRow3 : List (Html Msg) -> List (Html Msg) -> List (Html Msg) -> Html Msg
-viewRow3 a b c =
-    viewRow3
-        a
-        b
-        c
-
-
 viewBugetItem : BudgetItem -> Html Msg
 viewBugetItem item =
     viewRow
@@ -229,21 +221,16 @@ viewUncommitted model =
                 (\item -> viewBugetItem item)
                 model.items
             )
-        , viewRow3
+        , viewRow
             [ button
                 [ onClick AddItem
                 , toClassList "bg-green-light font-bold px-4 py-2 rounded text-white"
                 ]
                 [ text "Add" ]
-            ]
-            [ div [ toClassList "text-right text-xl" ]
-                [ text
-                    (String.fromInt
-                        (sumItems model.items)
-                    )
+            , div [ toClassList "text-right text-xl" ]
+                [ text <| String.fromInt <| sumItems model.items
                 ]
-            ]
-            [ button
+            , button
                 [ onClick Commit
                 , toClassList "bg-indigo font-bold px-4 py-2 rounded text-white"
                 ]
