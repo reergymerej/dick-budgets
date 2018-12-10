@@ -6,6 +6,10 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 
 
+type alias Costly a =
+    { a | cost : Int }
+
+
 type alias BudgetItem =
     { id : String
     , name : String
@@ -35,7 +39,7 @@ init =
         , { id = "2", name = "FOO", cost = 155 }
         , { id = "3", name = "BAR", cost = 30 }
         ]
-    , commited = False
+    , commited = True
     , transactions =
         [ { id = "0", budgetItemId = "0", cost = 50 }
         , { id = "1", budgetItemId = "0", cost = 20 }
@@ -61,7 +65,6 @@ updateItem id getNewItem list =
         (\x ->
             if x.id == id then
                 getNewItem x
-
             else
                 x
         )
@@ -174,6 +177,19 @@ viewBugetItem item =
         ]
 
 
+viewStyledTotal : Int -> Int -> Html Msg
+viewStyledTotal base value =
+    div
+        [ if base > value then
+            toClassList "text-green"
+          else if base < value then
+            toClassList "text-red"
+          else
+            toClassList "text-black"
+        ]
+        [ text (String.fromInt value) ]
+
+
 viewCommitedBudgetItem : BudgetItem -> List Transaction -> Html Msg
 viewCommitedBudgetItem item transactions =
     let
@@ -195,15 +211,13 @@ viewCommitedBudgetItem item transactions =
          , div
             []
             [ text (String.fromInt item.cost) ]
-         , div
-            []
-            [ text (String.fromInt transSum) ]
+         , viewStyledTotal item.cost transSum
          ]
             ++ transCols
         )
 
 
-sumItems : List BudgetItem -> Int
+sumItems : List (Costly a) -> Int
 sumItems items =
     List.foldl
         (\current accumulator -> current.cost + accumulator)
@@ -228,8 +242,7 @@ viewUncommitted model =
                 ]
                 [ text "Add" ]
             , div [ toClassList "text-right text-xl" ]
-                [ text <| String.fromInt <| sumItems model.items
-                ]
+                [ text <| String.fromInt <| sumItems model.items ]
             , button
                 [ onClick Commit
                 , toClassList "bg-indigo font-bold px-4 py-2 rounded text-white"
@@ -249,6 +262,9 @@ viewCommitted model =
     let
         getTransactions =
             transactionsFor model.transactions
+
+        budgetSum =
+            sumItems model.items
     in
     div []
         [ div
@@ -259,6 +275,11 @@ viewCommitted model =
                 )
                 model.items
             )
+        , viewRow
+            [ div [] []
+            , div [] [ text <| String.fromInt budgetSum ]
+            , viewStyledTotal budgetSum <| sumItems model.transactions
+            ]
         ]
 
 
@@ -268,7 +289,6 @@ view model =
         [ toClassList "font-mono p-4" ]
         [ if not model.commited then
             viewUncommitted model
-
           else
             viewCommitted model
         ]
