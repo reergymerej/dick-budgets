@@ -145,16 +145,19 @@ update msg model =
             }
 
         AddTransaction itemId value ->
-            { model
-                | transactions =
-                    model.transactions
-                        ++ [ { id = String.fromInt <| List.length model.transactions
-                             , budgetItemId = itemId
-                             , cost = value
-                             }
-                           ]
-                , newTransactionValue = 0
-            }
+            if value == 0 then
+                model
+            else
+                { model
+                    | transactions =
+                        model.transactions
+                            ++ [ { id = String.fromInt <| List.length model.transactions
+                                 , budgetItemId = itemId
+                                 , cost = value
+                                 }
+                               ]
+                    , newTransactionValue = 0
+                }
 
         ChangeNewTransactionValue value ->
             { model | newTransactionValue = value }
