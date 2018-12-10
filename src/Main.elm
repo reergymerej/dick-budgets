@@ -69,6 +69,7 @@ updateById id getNewItem list =
         (\x ->
             if x.id == id then
                 getNewItem x
+
             else
                 x
         )
@@ -217,8 +218,10 @@ viewStyledTotal extraStyles base value =
     div
         [ if base > value then
             toClassList (extraStyles ++ " text-green")
+
           else if base < value then
             toClassList (extraStyles ++ " text-red")
+
           else
             toClassList (extraStyles ++ " text-black")
         ]
@@ -240,6 +243,7 @@ viewTransactionItem transaction =
                 (\val ->
                     if val == "" then
                         RemoveTransaction transaction
+
                     else
                         case String.toInt val of
                             Nothing ->
@@ -257,10 +261,7 @@ viewCommitedBudgetItem : BudgetItem -> List Transaction -> Html Msg
 viewCommitedBudgetItem item transactions =
     let
         transSum =
-            List.foldl
-                (\x acc -> x + acc)
-                0
-                (List.map .cost transactions)
+            sumItems transactions
 
         transCols =
             List.map
@@ -362,6 +363,7 @@ view model =
         [ toClassList "font-mono p-4" ]
         [ if not model.commited then
             viewUncommitted model
+
           else
             viewCommitted model
         ]
