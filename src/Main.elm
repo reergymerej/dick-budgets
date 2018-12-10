@@ -216,17 +216,22 @@ viewBugetItem item =
         ]
 
 
-viewStyledTotal : Int -> Int -> Html Msg
-viewStyledTotal base value =
+viewStyledTotal : String -> Int -> Int -> Html Msg
+viewStyledTotal extraStyles base value =
     div
         [ if base > value then
-            toClassList "text-green"
+            toClassList (extraStyles ++ " text-green")
           else if base < value then
-            toClassList "text-red"
+            toClassList (extraStyles ++ " text-red")
           else
-            toClassList "text-black"
+            toClassList (extraStyles ++ " text-black")
         ]
         [ text (String.fromInt value) ]
+
+
+viewStyledTotalBasic : Int -> Int -> Html Msg
+viewStyledTotalBasic base value =
+    viewStyledTotal "" base value
 
 
 viewTransactionItem : Transaction -> Html Msg
@@ -269,11 +274,11 @@ viewCommitedBudgetItem item transactions =
     viewRow
         ([ div [] [ text item.name ]
          , div [] [ text (String.fromInt item.cost) ]
-         , viewStyledTotal item.cost transSum
+         , viewStyledTotalBasic item.cost transSum
          ]
             ++ transCols
             ++ [ input
-                    [ placeholder "also"
+                    [ placeholder "+"
                     , onInput
                         (\x ->
                             case String.toInt x of
@@ -349,8 +354,8 @@ viewCommitted model =
             )
         , viewRow
             [ div [] []
-            , div [] [ text <| String.fromInt budgetSum ]
-            , viewStyledTotal budgetSum <| sumItems model.transactions
+            , div [ toClassList "text-xl" ] [ text <| String.fromInt budgetSum ]
+            , viewStyledTotal "text-xl" budgetSum <| sumItems model.transactions
             ]
         ]
 
