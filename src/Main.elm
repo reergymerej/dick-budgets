@@ -61,6 +61,7 @@ type Msg
     | ChangeItemCost BudgetItem Int
     | DeleteItem BudgetItem
     | Commit
+    | RemoveTransaction Transaction
     | ChangeTransactionCost Transaction Int
 
 
@@ -121,6 +122,14 @@ update msg model =
         -- TODO: Validate rows
         Commit ->
             { model | commited = True }
+
+        RemoveTransaction transaction ->
+            { model
+                | transactions =
+                    List.filter
+                        (\x -> x.id /= transaction.id)
+                        model.transactions
+            }
 
         ChangeTransactionCost transaction cost ->
             { model
@@ -212,12 +221,15 @@ viewTransactionItem transaction =
             , toClassList "outline-none w-full text-right"
             , onInput
                 (\val ->
-                    case String.toInt val of
-                        Nothing ->
-                            ChangeTransactionCost transaction transaction.cost
+                    if val == "" then
+                        RemoveTransaction transaction
+                    else
+                        case String.toInt val of
+                            Nothing ->
+                                ChangeTransactionCost transaction transaction.cost
 
-                        Just int ->
-                            ChangeTransactionCost transaction int
+                            Just int ->
+                                ChangeTransactionCost transaction int
                 )
             ]
             []
@@ -244,6 +256,11 @@ viewCommitedBudgetItem item transactions =
          , viewStyledTotal item.cost transSum
          ]
             ++ transCols
+            ++ [ input
+                    [ placeholder "also"
+                    ]
+                    []
+               ]
         )
 
 
