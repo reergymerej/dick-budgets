@@ -56,13 +56,15 @@ init =
 
 
 type Msg
-    = AddItem
+    = Noop
+    | AddItem
     | ChangeItemName BudgetItem String
     | ChangeItemCost BudgetItem Int
     | DeleteItem BudgetItem
     | Commit
     | RemoveTransaction Transaction
     | ChangeTransactionCost Transaction Int
+    | AddTransaction String Int
 
 
 updateById : String -> (Idly a -> Idly a) -> List (Idly a) -> List (Idly a)
@@ -80,6 +82,9 @@ updateById id getNewItem list =
 update : Msg -> Model -> Model
 update msg model =
     case msg of
+        Noop ->
+            model
+
         AddItem ->
             let
                 item =
@@ -138,6 +143,17 @@ update msg model =
                         transaction.id
                         (\x -> { x | cost = cost })
                         model.transactions
+            }
+
+        AddTransaction itemId value ->
+            { model
+                | transactions =
+                    model.transactions
+                        ++ [ { id = String.fromInt <| List.length model.transactions
+                             , budgetItemId = itemId
+                             , cost = value
+                             }
+                           ]
             }
 
 
@@ -258,6 +274,15 @@ viewCommitedBudgetItem item transactions =
             ++ transCols
             ++ [ input
                     [ placeholder "also"
+                    , onInput
+                        (\x ->
+                            case String.toInt x of
+                                Nothing ->
+                                    Noop
+
+                                Just int ->
+                                    AddTransaction item.id int
+                        )
                     ]
                     []
                ]
