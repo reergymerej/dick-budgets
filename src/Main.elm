@@ -6,14 +6,6 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 
 
-type alias Costly a =
-    { a | cost : Int }
-
-
-type alias Idly a =
-    { a | id : String }
-
-
 type alias BudgetItem =
     { id : String
     , name : String
@@ -65,6 +57,10 @@ type Msg
     | RemoveTransaction Transaction
     | ChangeTransactionCost Transaction Int
     | AddTransaction String Int
+
+
+type alias Idly a =
+    { a | id : String }
 
 
 updateById : String -> (Idly a -> Idly a) -> List (Idly a) -> List (Idly a)
@@ -294,7 +290,7 @@ viewCommitedBudgetItem item transactions =
         )
 
 
-sumItems : List (Costly a) -> Int
+sumItems : List { a | cost : Int } -> Int
 sumItems items =
     List.foldl
         (\current accumulator -> current.cost + accumulator)
