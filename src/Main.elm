@@ -59,7 +59,7 @@ type Msg
     | RemoveTransaction Transaction
     | ChangeTransactionCost Transaction Int
     | ChangeNewTransactionValue Int
-    | AddTransaction String
+    | AddTransaction String Int
 
 
 type alias Idly a =
@@ -144,13 +144,13 @@ update msg model =
                         model.transactions
             }
 
-        AddTransaction itemId ->
+        AddTransaction itemId value ->
             { model
                 | transactions =
                     model.transactions
                         ++ [ { id = String.fromInt <| List.length model.transactions
                              , budgetItemId = itemId
-                             , cost = model.newTransactionValue
+                             , cost = value
                              }
                            ]
                 , newTransactionValue = 0
@@ -260,8 +260,8 @@ viewTransactionItem transaction =
         ]
 
 
-viewCommitedBudgetItem : BudgetItem -> List Transaction -> Html Msg
-viewCommitedBudgetItem item transactions =
+viewCommitedBudgetItem : Int -> BudgetItem -> List Transaction -> Html Msg
+viewCommitedBudgetItem newTransValue item transactions =
     let
         transSum =
             sumItems transactions
@@ -288,7 +288,7 @@ viewCommitedBudgetItem item transactions =
                                 Just int ->
                                     ChangeNewTransactionValue int
                         )
-                    , onBlur (AddTransaction item.id)
+                    , onBlur (AddTransaction item.id newTransValue)
                     ]
                     []
                ]
@@ -349,7 +349,10 @@ viewCommitted model =
             []
             (List.map
                 (\item ->
-                    viewCommitedBudgetItem item (getTransactions item)
+                    viewCommitedBudgetItem
+                        model.newTransactionValue
+                        item
+                        (getTransactions item)
                 )
                 model.items
             )
