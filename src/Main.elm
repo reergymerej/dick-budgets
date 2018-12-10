@@ -24,6 +24,7 @@ type alias Model =
     { items : List BudgetItem
     , commited : Bool
     , transactions : List Transaction
+    , newTransactionValue : Int
     }
 
 
@@ -44,6 +45,7 @@ init =
         , { id = "4", budgetItemId = "3", cost = 30 }
         , { id = "5", budgetItemId = "3", cost = 35 }
         ]
+    , newTransactionValue = 0
     }
 
 
@@ -56,7 +58,8 @@ type Msg
     | Commit
     | RemoveTransaction Transaction
     | ChangeTransactionCost Transaction Int
-    | AddTransaction String Int
+    | ChangeNewTransactionValue Int
+    | AddTransaction String
 
 
 type alias Idly a =
@@ -69,7 +72,6 @@ updateById id getNewItem list =
         (\x ->
             if x.id == id then
                 getNewItem x
-
             else
                 x
         )
@@ -142,16 +144,20 @@ update msg model =
                         model.transactions
             }
 
-        AddTransaction itemId value ->
+        AddTransaction itemId ->
             { model
                 | transactions =
                     model.transactions
                         ++ [ { id = String.fromInt <| List.length model.transactions
                              , budgetItemId = itemId
-                             , cost = value
+                             , cost = model.newTransactionValue
                              }
                            ]
+                , newTransactionValue = 0
             }
+
+        ChangeNewTransactionValue value ->
+            { model | newTransactionValue = value }
 
 
 toClassList : String -> Attribute Msg
@@ -218,10 +224,8 @@ viewStyledTotal extraStyles base value =
     div
         [ if base > value then
             toClassList (extraStyles ++ " text-green")
-
           else if base < value then
             toClassList (extraStyles ++ " text-red")
-
           else
             toClassList (extraStyles ++ " text-black")
         ]
@@ -243,7 +247,6 @@ viewTransactionItem transaction =
                 (\val ->
                     if val == "" then
                         RemoveTransaction transaction
-
                     else
                         case String.toInt val of
                             Nothing ->
@@ -283,8 +286,9 @@ viewCommitedBudgetItem item transactions =
                                     Noop
 
                                 Just int ->
-                                    AddTransaction item.id int
+                                    ChangeNewTransactionValue int
                         )
+                    , onBlur (AddTransaction item.id)
                     ]
                     []
                ]
@@ -363,7 +367,6 @@ view model =
         [ toClassList "font-mono p-4" ]
         [ if not model.commited then
             viewUncommitted model
-
           else
             viewCommitted model
         ]
