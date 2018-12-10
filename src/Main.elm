@@ -10,6 +10,10 @@ type alias Costly a =
     { a | cost : Int }
 
 
+type alias Idly a =
+    { a | id : String }
+
+
 type alias BudgetItem =
     { id : String
     , name : String
@@ -57,10 +61,11 @@ type Msg
     | ChangeItemCost BudgetItem Int
     | DeleteItem BudgetItem
     | Commit
+    | ChangeTransactionCost Transaction Int
 
 
-updateItem : String -> (BudgetItem -> BudgetItem) -> List BudgetItem -> List BudgetItem
-updateItem id getNewItem list =
+updateById : String -> (Idly a -> Idly a) -> List (Idly a) -> List (Idly a)
+updateById id getNewItem list =
     List.map
         (\x ->
             if x.id == id then
@@ -89,7 +94,7 @@ update msg model =
         ChangeItemName item value ->
             { model
                 | items =
-                    updateItem
+                    updateById
                         item.id
                         (\x -> { x | name = value })
                         model.items
@@ -98,7 +103,7 @@ update msg model =
         ChangeItemCost item cost ->
             { model
                 | items =
-                    updateItem
+                    updateById
                         item.id
                         (\x -> { x | cost = cost })
                         model.items
@@ -116,6 +121,15 @@ update msg model =
         -- TODO: Validate rows
         Commit ->
             { model | commited = True }
+
+        ChangeTransactionCost transaction cost ->
+            { model
+                | transactions =
+                    updateById
+                        transaction.id
+                        (\x -> { x | cost = cost })
+                        model.transactions
+            }
 
 
 toClassList : String -> Attribute Msg
@@ -190,6 +204,26 @@ viewStyledTotal base value =
         [ text (String.fromInt value) ]
 
 
+viewTransactionItem : Transaction -> Html Msg
+viewTransactionItem transaction =
+    div []
+        [ input
+            [ value <| String.fromInt transaction.cost
+            , toClassList "outline-none w-full text-right"
+            , onInput
+                (\val ->
+                    case String.toInt val of
+                        Nothing ->
+                            ChangeTransactionCost transaction transaction.cost
+
+                        Just int ->
+                            ChangeTransactionCost transaction int
+                )
+            ]
+            []
+        ]
+
+
 viewCommitedBudgetItem : BudgetItem -> List Transaction -> Html Msg
 viewCommitedBudgetItem item transactions =
     let
@@ -201,16 +235,12 @@ viewCommitedBudgetItem item transactions =
 
         transCols =
             List.map
-                (\x -> div [] [ text (String.fromInt x.cost) ])
+                viewTransactionItem
                 transactions
     in
     viewRow
-        ([ div
-            []
-            [ text item.name ]
-         , div
-            []
-            [ text (String.fromInt item.cost) ]
+        ([ div [] [ text item.name ]
+         , div [] [ text (String.fromInt item.cost) ]
          , viewStyledTotal item.cost transSum
          ]
             ++ transCols
