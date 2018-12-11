@@ -1,6 +1,5 @@
 module Transaction exposing (..)
 
-import BudgetItem
 import Json.Decode as D
 import Json.Encode as E
 
@@ -12,19 +11,27 @@ type alias Transaction =
     }
 
 
+idDecoder : D.Decoder String
+idDecoder =
+    D.field "id" D.string
+
+
 budgetItemIdDecoder : D.Decoder String
 budgetItemIdDecoder =
     D.field "budgetItemId" D.string
 
 
+costDecoder : D.Decoder Int
+costDecoder =
+    D.field "cost" D.int
+
+
 decoder : D.Decoder Transaction
 decoder =
     D.map3 Transaction
-        -- This is just a generic decoder.
-        BudgetItem.idDecoder
+        idDecoder
         budgetItemIdDecoder
-        -- This is just a generic decoder.
-        BudgetItem.costDecoder
+        costDecoder
 
 
 transactionsDecoder : D.Decoder (List Transaction)
@@ -41,6 +48,6 @@ encoder x =
         ]
 
 
-transactionsFor : List Transaction -> BudgetItem.BudgetItem -> List Transaction
-transactionsFor transactions budgetItem =
-    List.filter (\x -> x.budgetItemId == budgetItem.id) transactions
+transactionsFor : List Transaction -> { a | id : String } -> List Transaction
+transactionsFor transactions items =
+    List.filter (\x -> x.budgetItemId == items.id) transactions
