@@ -26,6 +26,7 @@ type alias Model =
     , commited : Bool
     , transactions : List Transaction
     , newTransactionValue : Int
+    , debug : String
     }
 
 
@@ -65,27 +66,51 @@ transactionDecoder =
         costDecoder
 
 
+itemsDecoder : D.Decoder (List BudgetItem)
+itemsDecoder =
+    D.field "items" (D.list itemDecoder)
+
+
+transactionsDecoder : D.Decoder (List Transaction)
+transactionsDecoder =
+    D.field "transactions" (D.list transactionDecoder)
+
+
+type alias State =
+    { items : List BudgetItem
+    , transactions : List Transaction
+    }
+
+
+stateDecoder : D.Decoder State
+stateDecoder =
+    D.map2 State
+        itemsDecoder
+        transactionsDecoder
+
+
 json =
     """{"items":[{"id":"0","name":"XYZ","cost":100},{"id":"1","name":"ABC","cost":24},{"id":"2","name":"FOO","cost":155},{"id":"3","name":"BAR","cost":30}],"transactions":[{"id":"0","budgetItemId":"0","cost":50},{"id":"1","budgetItemId":"0","cost":20},{"id":"2","budgetItemId":"0","cost":30},{"id":"3","budgetItemId":"1","cost":12}]}"""
 
 
 init : Model
 init =
-    { items =
-        [ { id = "0", name = "XYZ", cost = 100 }
-        , { id = "1", name = "ABC", cost = 24 }
-        , { id = "2", name = "FOO", cost = 155 }
-        , { id = "3", name = "BAR", cost = 30 }
-        ]
-    , commited = False
-    , transactions =
-        [ { id = "0", budgetItemId = "0", cost = 50 }
-        , { id = "1", budgetItemId = "0", cost = 20 }
-        , { id = "2", budgetItemId = "0", cost = 30 }
-        , { id = "3", budgetItemId = "1", cost = 12 }
-        ]
-    , newTransactionValue = 0
-    }
+    case D.decodeString stateDecoder json of
+        Err err ->
+            { items = []
+            , transactions = []
+            , newTransactionValue = 0
+            , commited = False
+            , debug = D.errorToString err
+            }
+
+        Ok x ->
+            { items = x.items
+            , transactions = x.transactions
+            , commited = False
+            , newTransactionValue = 0
+            , debug = ""
+            }
 
 
 type Msg
