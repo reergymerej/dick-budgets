@@ -9,7 +9,11 @@ window.localStore = (namespace) => {
   }
 
   const set = (name, value) => {
-    store[name] = value
+    if (name) {
+      store[name] = value
+    } else {
+      store = value
+    }
     localStorage.setItem(namespace, JSON.stringify(store))
   }
 
@@ -27,4 +31,8 @@ window.localStore = (namespace) => {
   })
 
   app.ports.portIntoElm.send(store.get())
+
+  app.ports.portOutOfElm.subscribe(x => {
+    store.set(null, x)
+  })
 })()

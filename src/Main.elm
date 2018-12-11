@@ -105,6 +105,9 @@ init _ =
 port portIntoElm : (E.Value -> msg) -> Sub msg
 
 
+port portOutOfElm : E.Value -> Cmd msg
+
+
 subscriptions : Model -> Sub Msg
 subscriptions model =
     portIntoElm GotValueFromJS
@@ -141,6 +144,32 @@ updateById id getNewItem list =
         list
 
 
+itemEncoder : BudgetItem -> E.Value
+itemEncoder x =
+    E.object
+        [ ( "id", E.string x.id )
+        , ( "name", E.string x.name )
+        , ( "cost", E.int x.cost )
+        ]
+
+
+transactionEncoder : Transaction -> E.Value
+transactionEncoder x =
+    E.object
+        [ ( "id", E.string x.id )
+        , ( "budgetItemId", E.string x.budgetItemId )
+        , ( "cost", E.int x.cost )
+        ]
+
+
+serializeModel : Model -> E.Value
+serializeModel model =
+    E.object
+        [ ( "items", E.list itemEncoder model.items )
+        , ( "transactions", E.list transactionEncoder model.transactions )
+        ]
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
@@ -171,12 +200,11 @@ update msg model =
                     , name = ""
                     , cost = 0
                     }
+
+                newModel =
+                    { model | items = model.items ++ [ item ] }
             in
-            ( { model
-                | items = model.items ++ [ item ]
-              }
-            , Cmd.none
-            )
+            ( newModel, portOutOfElm <| serializeModel newModel )
 
         ChangeItemName item value ->
             ( { model
@@ -243,17 +271,21 @@ update msg model =
                 ( model, Cmd.none )
 
             else
-                ( { model
-                    | transactions =
-                        model.transactions
-                            ++ [ { id = String.fromInt <| List.length model.transactions
-                                 , budgetItemId = itemId
-                                 , cost = value
-                                 }
-                               ]
-                    , newTransactionValue = 0
-                  }
-                , Cmd.none
+                let
+                    newModel =
+                        { model
+                            | transactions =
+                                model.transactions
+                                    ++ [ { id = String.fromInt <| List.length model.transactions
+                                         , budgetItemId = itemId
+                                         , cost = value
+                                         }
+                                       ]
+                            , newTransactionValue = 0
+                        }
+                in
+                ( newModel
+                , portOutOfElm <| serializeModel newModel
                 )
 
         ChangeNewTransactionValue value ->
