@@ -1,10 +1,11 @@
-module Main exposing (main)
+port module Main exposing (main)
 
 import Browser
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Json.Decode as D
+import Json.Encode as E
 
 
 type alias BudgetItem =
@@ -89,41 +90,29 @@ stateDecoder =
         transactionsDecoder
 
 
-json =
-    """{"items":[{"id":"0","name":"XYZ","cost":100},{"id":"1","name":"ABC","cost":24},{"id":"2","name":"FOO","cost":155},{"id":"3","name":"BAR","cost":30}],"transactions":[{"id":"0","budgetItemId":"0","cost":50},{"id":"1","budgetItemId":"0","cost":20},{"id":"2","budgetItemId":"0","cost":30},{"id":"3","budgetItemId":"1","cost":12}]}"""
-
-
 init : () -> ( Model, Cmd Msg )
 init _ =
-    case D.decodeString stateDecoder json of
-        Err err ->
-            ( { items = []
-              , transactions = []
-              , newTransactionValue = 0
-              , commited = False
-              , debug = D.errorToString err
-              }
-            , Cmd.none
-            )
+    ( { items = []
+      , transactions = []
+      , newTransactionValue = 0
+      , commited = False
+      , debug = ""
+      }
+    , Cmd.none
+    )
 
-        Ok x ->
-            ( { items = x.items
-              , transactions = x.transactions
-              , commited = False
-              , newTransactionValue = 0
-              , debug = ""
-              }
-            , Cmd.none
-            )
+
+port portIntoElm : (E.Value -> msg) -> Sub msg
 
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.none
+    portIntoElm GotValueFromJS
 
 
 type Msg
     = Noop
+    | GotValueFromJS E.Value
     | AddItem
     | ChangeItemName BudgetItem String
     | ChangeItemCost BudgetItem Int
@@ -159,6 +148,21 @@ update msg model =
             ( model
             , Cmd.none
             )
+
+        GotValueFromJS val ->
+            case D.decodeValue stateDecoder val of
+                Err err ->
+                    ( { model | debug = D.errorToString err }, Cmd.none )
+
+                Ok decoded ->
+                    ( { items = decoded.items
+                      , transactions = decoded.transactions
+                      , commited = False
+                      , newTransactionValue = 0
+                      , debug = ""
+                      }
+                    , Cmd.none
+                    )
 
         AddItem ->
             let

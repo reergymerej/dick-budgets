@@ -21,9 +21,10 @@ window.localStore = (namespace) => {
 // mount Elm app
 (() => {
   const store = localStore('dick.budget')
-  console.log(store.get())
 
   const app = Elm.Main.init({
     node: document.getElementById('root'),
   })
+
+  app.ports.portIntoElm.send(store.get())
 })()
