@@ -9,6 +9,7 @@ window.localStore = (namespace) => {
   }
 
   const set = (name, value) => {
+    console.log('set', name, value)
     if (name) {
       store[name] = value
     } else {
@@ -17,7 +18,11 @@ window.localStore = (namespace) => {
     localStorage.setItem(namespace, JSON.stringify(store))
   }
 
-  const get = (name) => name ? store[name] : store
+  const get = (name) => {
+    const result =name ? store[name] : store
+    console.log('get', name, result)
+    return result
+  }
 
   return { set, get }
 }

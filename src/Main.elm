@@ -137,7 +137,6 @@ updateById id getNewItem list =
         (\x ->
             if x.id == id then
                 getNewItem x
-
             else
                 x
         )
@@ -207,36 +206,42 @@ update msg model =
             ( newModel, portOutOfElm <| serializeModel newModel )
 
         ChangeItemName item value ->
-            ( { model
-                | items =
-                    updateById
-                        item.id
-                        (\x -> { x | name = value })
-                        model.items
-              }
-            , Cmd.none
-            )
+            let
+                newModel =
+                    { model
+                        | items =
+                            updateById
+                                item.id
+                                (\x -> { x | name = value })
+                                model.items
+                    }
+            in
+            ( newModel, portOutOfElm <| serializeModel newModel )
 
         ChangeItemCost item cost ->
-            ( { model
-                | items =
-                    updateById
-                        item.id
-                        (\x -> { x | cost = cost })
-                        model.items
-              }
-            , Cmd.none
-            )
+            let
+                newModel =
+                    { model
+                        | items =
+                            updateById
+                                item.id
+                                (\x -> { x | cost = cost })
+                                model.items
+                    }
+            in
+            ( newModel, portOutOfElm <| serializeModel newModel )
 
         DeleteItem item ->
-            ( { model
-                | items =
-                    List.filter
-                        (\x -> item /= x)
-                        model.items
-              }
-            , Cmd.none
-            )
+            let
+                newModel =
+                    { model
+                        | items =
+                            List.filter
+                                (\x -> item /= x)
+                                model.items
+                    }
+            in
+            ( newModel, portOutOfElm <| serializeModel newModel )
 
         -- TODO: Remove empty rows
         -- TODO: Validate rows
@@ -246,30 +251,33 @@ update msg model =
             )
 
         RemoveTransaction transaction ->
-            ( { model
-                | transactions =
-                    List.filter
-                        (\x -> x.id /= transaction.id)
-                        model.transactions
-              }
-            , Cmd.none
-            )
+            let
+                newModel =
+                    { model
+                        | transactions =
+                            List.filter
+                                (\x -> x.id /= transaction.id)
+                                model.transactions
+                    }
+            in
+            ( newModel, portOutOfElm <| serializeModel newModel )
 
         ChangeTransactionCost transaction cost ->
-            ( { model
-                | transactions =
-                    updateById
-                        transaction.id
-                        (\x -> { x | cost = cost })
-                        model.transactions
-              }
-            , Cmd.none
-            )
+            let
+                newModel =
+                    { model
+                        | transactions =
+                            updateById
+                                transaction.id
+                                (\x -> { x | cost = cost })
+                                model.transactions
+                    }
+            in
+            ( newModel, portOutOfElm <| serializeModel newModel )
 
         AddTransaction itemId value ->
             if value == 0 then
                 ( model, Cmd.none )
-
             else
                 let
                     newModel =
@@ -284,9 +292,7 @@ update msg model =
                             , newTransactionValue = 0
                         }
                 in
-                ( newModel
-                , portOutOfElm <| serializeModel newModel
-                )
+                ( newModel, portOutOfElm <| serializeModel newModel )
 
         ChangeNewTransactionValue value ->
             ( { model | newTransactionValue = value }, Cmd.none )
@@ -356,10 +362,8 @@ viewStyledTotal extraStyles base value =
     div
         [ if base > value then
             toClassList (extraStyles ++ " text-green")
-
           else if base < value then
             toClassList (extraStyles ++ " text-red")
-
           else
             toClassList (extraStyles ++ " text-black")
         ]
@@ -381,7 +385,6 @@ viewTransactionItem transaction =
                 (\val ->
                     if val == "" then
                         RemoveTransaction transaction
-
                     else
                         case String.toInt val of
                             Nothing ->
@@ -505,7 +508,6 @@ view model =
         [ toClassList "font-mono p-4" ]
         [ if not model.commited then
             viewUncommitted model
-
           else
             viewCommitted model
         ]
