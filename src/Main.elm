@@ -28,6 +28,10 @@ type alias Model =
     }
 
 
+json =
+    """{"items":[{"id":"0","name":"XYZ","cost":100},{"id":"1","name":"ABC","cost":24},{"id":"2","name":"FOO","cost":155},{"id":"3","name":"BAR","cost":30}],"transactions":[{"id":"0","budgetItemId":"0","cost":50},{"id":"1","budgetItemId":"0","cost":20},{"id":"2","budgetItemId":"0","cost":30},{"id":"3","budgetItemId":"1","cost":12}]}"""
+
+
 init : Model
 init =
     { items =
@@ -36,14 +40,12 @@ init =
         , { id = "2", name = "FOO", cost = 155 }
         , { id = "3", name = "BAR", cost = 30 }
         ]
-    , commited = True
+    , commited = False
     , transactions =
         [ { id = "0", budgetItemId = "0", cost = 50 }
         , { id = "1", budgetItemId = "0", cost = 20 }
         , { id = "2", budgetItemId = "0", cost = 30 }
         , { id = "3", budgetItemId = "1", cost = 12 }
-        , { id = "4", budgetItemId = "3", cost = 30 }
-        , { id = "5", budgetItemId = "3", cost = 35 }
         ]
     , newTransactionValue = 0
     }
@@ -72,6 +74,7 @@ updateById id getNewItem list =
         (\x ->
             if x.id == id then
                 getNewItem x
+
             else
                 x
         )
@@ -147,6 +150,7 @@ update msg model =
         AddTransaction itemId value ->
             if value == 0 then
                 model
+
             else
                 { model
                     | transactions =
@@ -227,8 +231,10 @@ viewStyledTotal extraStyles base value =
     div
         [ if base > value then
             toClassList (extraStyles ++ " text-green")
+
           else if base < value then
             toClassList (extraStyles ++ " text-red")
+
           else
             toClassList (extraStyles ++ " text-black")
         ]
@@ -250,6 +256,7 @@ viewTransactionItem transaction =
                 (\val ->
                     if val == "" then
                         RemoveTransaction transaction
+
                     else
                         case String.toInt val of
                             Nothing ->
@@ -373,6 +380,7 @@ view model =
         [ toClassList "font-mono p-4" ]
         [ if not model.commited then
             viewUncommitted model
+
           else
             viewCommitted model
         ]
