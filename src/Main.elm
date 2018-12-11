@@ -93,24 +93,33 @@ json =
     """{"items":[{"id":"0","name":"XYZ","cost":100},{"id":"1","name":"ABC","cost":24},{"id":"2","name":"FOO","cost":155},{"id":"3","name":"BAR","cost":30}],"transactions":[{"id":"0","budgetItemId":"0","cost":50},{"id":"1","budgetItemId":"0","cost":20},{"id":"2","budgetItemId":"0","cost":30},{"id":"3","budgetItemId":"1","cost":12}]}"""
 
 
-init : Model
-init =
+init : () -> ( Model, Cmd Msg )
+init _ =
     case D.decodeString stateDecoder json of
         Err err ->
-            { items = []
-            , transactions = []
-            , newTransactionValue = 0
-            , commited = False
-            , debug = D.errorToString err
-            }
+            ( { items = []
+              , transactions = []
+              , newTransactionValue = 0
+              , commited = False
+              , debug = D.errorToString err
+              }
+            , Cmd.none
+            )
 
         Ok x ->
-            { items = x.items
-            , transactions = x.transactions
-            , commited = False
-            , newTransactionValue = 0
-            , debug = ""
-            }
+            ( { items = x.items
+              , transactions = x.transactions
+              , commited = False
+              , newTransactionValue = 0
+              , debug = ""
+              }
+            , Cmd.none
+            )
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Sub.none
 
 
 type Msg
@@ -143,11 +152,13 @@ updateById id getNewItem list =
         list
 
 
-update : Msg -> Model -> Model
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Noop ->
-            model
+            ( model
+            , Cmd.none
+            )
 
         AddItem ->
             let
@@ -157,64 +168,78 @@ update msg model =
                     , cost = 0
                     }
             in
-            { model
+            ( { model
                 | items = model.items ++ [ item ]
-            }
+              }
+            , Cmd.none
+            )
 
         ChangeItemName item value ->
-            { model
+            ( { model
                 | items =
                     updateById
                         item.id
                         (\x -> { x | name = value })
                         model.items
-            }
+              }
+            , Cmd.none
+            )
 
         ChangeItemCost item cost ->
-            { model
+            ( { model
                 | items =
                     updateById
                         item.id
                         (\x -> { x | cost = cost })
                         model.items
-            }
+              }
+            , Cmd.none
+            )
 
         DeleteItem item ->
-            { model
+            ( { model
                 | items =
                     List.filter
                         (\x -> item /= x)
                         model.items
-            }
+              }
+            , Cmd.none
+            )
 
         -- TODO: Remove empty rows
         -- TODO: Validate rows
         Commit ->
-            { model | commited = True }
+            ( { model | commited = True }
+            , Cmd.none
+            )
 
         RemoveTransaction transaction ->
-            { model
+            ( { model
                 | transactions =
                     List.filter
                         (\x -> x.id /= transaction.id)
                         model.transactions
-            }
+              }
+            , Cmd.none
+            )
 
         ChangeTransactionCost transaction cost ->
-            { model
+            ( { model
                 | transactions =
                     updateById
                         transaction.id
                         (\x -> { x | cost = cost })
                         model.transactions
-            }
+              }
+            , Cmd.none
+            )
 
         AddTransaction itemId value ->
             if value == 0 then
-                model
+                ( model, Cmd.none )
 
             else
-                { model
+                ( { model
                     | transactions =
                         model.transactions
                             ++ [ { id = String.fromInt <| List.length model.transactions
@@ -223,10 +248,12 @@ update msg model =
                                  }
                                ]
                     , newTransactionValue = 0
-                }
+                  }
+                , Cmd.none
+                )
 
         ChangeNewTransactionValue value ->
-            { model | newTransactionValue = value }
+            ( { model | newTransactionValue = value }, Cmd.none )
 
 
 toClassList : String -> Attribute Msg
@@ -449,8 +476,9 @@ view model =
 
 
 main =
-    Browser.sandbox
+    Browser.element
         { init = init
+        , subscriptions = subscriptions
         , update = update
         , view = view
         }
