@@ -13,7 +13,7 @@ import Util
 
 type alias Model =
     { items : List BudgetItem.T
-    , commited : Bool
+    , committed : Bool
     , transactions : List Transaction.T
     , newTransactionValue : Int
     , debug : String
@@ -23,7 +23,7 @@ type alias Model =
 type alias State =
     { items : List BudgetItem.T
     , transactions : List Transaction.T
-    , commited : Bool
+    , committed : Bool
     }
 
 
@@ -32,7 +32,7 @@ stateDecoder =
     D.map3 State
         BudgetItem.itemsDecoder
         Transaction.transactionsDecoder
-        (D.field "commited" D.bool)
+        (D.field "committed" D.bool)
 
 
 init : () -> ( Model, Cmd Msg )
@@ -40,7 +40,7 @@ init _ =
     ( { items = []
       , transactions = []
       , newTransactionValue = 0
-      , commited = False
+      , committed = False
       , debug = ""
       }
     , Cmd.none
@@ -77,7 +77,7 @@ serializeModel model =
     E.object
         [ ( "items", E.list BudgetItem.encoder model.items )
         , ( "transactions", E.list Transaction.encoder model.transactions )
-        , ( "commited", E.bool model.commited )
+        , ( "committed", E.bool model.committed )
         ]
 
 
@@ -95,7 +95,7 @@ update msg model =
                 Ok decoded ->
                     ( { items = decoded.items
                       , transactions = decoded.transactions
-                      , commited = decoded.commited
+                      , committed = decoded.committed
                       , newTransactionValue = 0
                       , debug = ""
                       }
@@ -155,7 +155,7 @@ update msg model =
         Commit ->
             let
                 newModel =
-                    { model | commited = True }
+                    { model | committed = True }
             in
             ( newModel, portOutOfElm <| serializeModel newModel )
 
@@ -381,7 +381,7 @@ view : Model -> Html Msg
 view model =
     div
         [ toClassList "font-mono p-4" ]
-        [ if not model.commited then
+        [ if not model.committed then
             viewUncommitted model
           else
             viewCommitted model
