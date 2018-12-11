@@ -23,14 +23,16 @@ type alias Model =
 type alias State =
     { items : List BudgetItem.T
     , transactions : List Transaction.T
+    , commited : Bool
     }
 
 
 stateDecoder : D.Decoder State
 stateDecoder =
-    D.map2 State
+    D.map3 State
         BudgetItem.itemsDecoder
         Transaction.transactionsDecoder
+        (D.field "commited" D.bool)
 
 
 init : () -> ( Model, Cmd Msg )
@@ -75,6 +77,7 @@ serializeModel model =
     E.object
         [ ( "items", E.list BudgetItem.encoder model.items )
         , ( "transactions", E.list Transaction.encoder model.transactions )
+        , ( "commited", E.bool model.commited )
         ]
 
 
@@ -92,7 +95,7 @@ update msg model =
                 Ok decoded ->
                     ( { items = decoded.items
                       , transactions = decoded.transactions
-                      , commited = False
+                      , commited = decoded.commited
                       , newTransactionValue = 0
                       , debug = ""
                       }
@@ -149,10 +152,12 @@ update msg model =
             in
             ( newModel, portOutOfElm <| serializeModel newModel )
 
-        -- TODO: Remove empty rows
-        -- TODO: Validate rows
         Commit ->
-            ( { model | commited = True }, Cmd.none )
+            let
+                newModel =
+                    { model | commited = True }
+            in
+            ( newModel, portOutOfElm <| serializeModel newModel )
 
         RemoveTransaction transaction ->
             let
