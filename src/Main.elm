@@ -4,6 +4,7 @@ import Browser
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+import Json.Decode as D
 
 
 type alias BudgetItem =
@@ -26,6 +27,42 @@ type alias Model =
     , transactions : List Transaction
     , newTransactionValue : Int
     }
+
+
+idDecoder : D.Decoder String
+idDecoder =
+    D.field "id" D.string
+
+
+nameDecoder : D.Decoder String
+nameDecoder =
+    D.field "name" D.string
+
+
+costDecoder : D.Decoder Int
+costDecoder =
+    D.field "cost" D.int
+
+
+budgetItemIdDecoder : D.Decoder String
+budgetItemIdDecoder =
+    D.field "budgetItemId" D.string
+
+
+itemDecoder : D.Decoder BudgetItem
+itemDecoder =
+    D.map3 BudgetItem
+        idDecoder
+        nameDecoder
+        costDecoder
+
+
+transactionDecoder : D.Decoder Transaction
+transactionDecoder =
+    D.map3 Transaction
+        idDecoder
+        budgetItemIdDecoder
+        costDecoder
 
 
 json =
