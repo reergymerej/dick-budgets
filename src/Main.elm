@@ -65,7 +65,7 @@ type Msg
     | ChangeItemName BudgetItem.T String
     | ChangeItemCost BudgetItem.T Int
     | DeleteItem BudgetItem.T
-    | Commit
+    | ChangeCommit Bool
     | RemoveTransaction Transaction.T
     | ChangeTransactionCost Transaction.T Int
     | ChangeNewTransactionValue Int
@@ -152,10 +152,10 @@ update msg model =
             in
             ( newModel, portOutOfElm <| serializeModel newModel )
 
-        Commit ->
+        ChangeCommit committed ->
             let
                 newModel =
-                    { model | committed = True }
+                    { model | committed = committed }
             in
             ( newModel, portOutOfElm <| serializeModel newModel )
 
@@ -204,14 +204,14 @@ toClassList string =
 viewCell : List (Html Msg) -> Html Msg
 viewCell content =
     div
-        [ toClassList "w-32 p-3" ]
+        [ toClassList "w-32 p-3 inline-block" ]
         content
 
 
 viewRow : List (Html Msg) -> Html Msg
 viewRow cells =
     div
-        [ toClassList "flex" ]
+        [ toClassList "whitespace-no-wrap" ]
         (List.map (\x -> viewCell [ x ]) cells)
 
 
@@ -339,11 +339,6 @@ viewUncommitted model =
                 [ text "Add" ]
             , div [ toClassList "text-right text-xl" ]
                 [ text <| String.fromInt <| Util.sumItems model.items ]
-            , button
-                [ onClick Commit
-                , toClassList "bg-indigo font-bold px-4 py-2 rounded text-white"
-                ]
-                [ text "Commit" ]
             ]
         ]
 
@@ -377,11 +372,32 @@ viewCommitted model =
         ]
 
 
+viewControls : Model -> Html Msg
+viewControls model =
+    div []
+        (if not model.committed then
+            [ button
+                [ onClick (ChangeCommit True)
+                , toClassList "bg-indigo font-bold px-4 py-2 rounded text-white"
+                ]
+                [ text "Commit" ]
+            ]
+         else
+            [ button
+                [ onClick (ChangeCommit False)
+                , toClassList "bg-indigo font-bold px-4 py-2 rounded text-white"
+                ]
+                [ text "Un-Commit" ]
+            ]
+        )
+
+
 view : Model -> Html Msg
 view model =
     div
         [ toClassList "font-mono p-4" ]
-        [ if not model.committed then
+        [ viewControls model
+        , if not model.committed then
             viewUncommitted model
           else
             viewCommitted model
