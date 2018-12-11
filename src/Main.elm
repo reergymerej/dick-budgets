@@ -7,45 +7,21 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Json.Decode as D
 import Json.Encode as E
-
-
-type alias Transaction =
-    { id : String
-    , budgetItemId : String
-    , cost : Int
-    }
+import Transaction
 
 
 type alias Model =
     { items : List BudgetItem.BudgetItem
     , commited : Bool
-    , transactions : List Transaction
+    , transactions : List Transaction.Transaction
     , newTransactionValue : Int
     , debug : String
     }
 
 
-budgetItemIdDecoder : D.Decoder String
-budgetItemIdDecoder =
-    D.field "budgetItemId" D.string
-
-
-transactionDecoder : D.Decoder Transaction
-transactionDecoder =
-    D.map3 Transaction
-        BudgetItem.idDecoder
-        budgetItemIdDecoder
-        BudgetItem.costDecoder
-
-
-transactionsDecoder : D.Decoder (List Transaction)
-transactionsDecoder =
-    D.field "transactions" (D.list transactionDecoder)
-
-
 type alias State =
     { items : List BudgetItem.BudgetItem
-    , transactions : List Transaction
+    , transactions : List Transaction.Transaction
     }
 
 
@@ -53,7 +29,7 @@ stateDecoder : D.Decoder State
 stateDecoder =
     D.map2 State
         BudgetItem.itemsDecoder
-        transactionsDecoder
+        Transaction.transactionsDecoder
 
 
 init : () -> ( Model, Cmd Msg )
@@ -87,8 +63,8 @@ type Msg
     | ChangeItemCost BudgetItem.BudgetItem Int
     | DeleteItem BudgetItem.BudgetItem
     | Commit
-    | RemoveTransaction Transaction
-    | ChangeTransactionCost Transaction Int
+    | RemoveTransaction Transaction.Transaction
+    | ChangeTransactionCost Transaction.Transaction Int
     | ChangeNewTransactionValue Int
     | AddTransaction String Int
 
@@ -109,20 +85,11 @@ updateById id getNewItem list =
         list
 
 
-transactionEncoder : Transaction -> E.Value
-transactionEncoder x =
-    E.object
-        [ ( "id", E.string x.id )
-        , ( "budgetItemId", E.string x.budgetItemId )
-        , ( "cost", E.int x.cost )
-        ]
-
-
 serializeModel : Model -> E.Value
 serializeModel model =
     E.object
         [ ( "items", E.list BudgetItem.encoder model.items )
-        , ( "transactions", E.list transactionEncoder model.transactions )
+        , ( "transactions", E.list Transaction.encoder model.transactions )
         ]
 
 
@@ -352,7 +319,7 @@ viewStyledTotalBasic base value =
     viewStyledTotal "" base value
 
 
-viewTransactionItem : Transaction -> Html Msg
+viewTransactionItem : Transaction.Transaction -> Html Msg
 viewTransactionItem transaction =
     div []
         [ input
@@ -375,7 +342,7 @@ viewTransactionItem transaction =
         ]
 
 
-viewCommitedBudgetItem : Int -> BudgetItem.BudgetItem -> List Transaction -> Html Msg
+viewCommitedBudgetItem : Int -> BudgetItem.BudgetItem -> List Transaction.Transaction -> Html Msg
 viewCommitedBudgetItem newTransValue item transactions =
     let
         transSum =
@@ -445,16 +412,11 @@ viewUncommitted model =
         ]
 
 
-transactionsFor : List Transaction -> BudgetItem.BudgetItem -> List Transaction
-transactionsFor transactions budgetItem =
-    List.filter (\x -> x.budgetItemId == budgetItem.id) transactions
-
-
 viewCommitted : Model -> Html Msg
 viewCommitted model =
     let
         getTransactions =
-            transactionsFor model.transactions
+            Transaction.transactionsFor model.transactions
 
         budgetSum =
             sumItems model.items
