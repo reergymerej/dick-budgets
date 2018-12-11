@@ -2,11 +2,12 @@ module Transaction exposing (..)
 
 import Json.Decode as D
 import Json.Encode as E
+import Util
 
 
 type alias Transaction =
     { id : String
-    , budgetItemId : String
+    , parent : String
     , cost : Int
     }
 
@@ -18,7 +19,7 @@ idDecoder =
 
 budgetItemIdDecoder : D.Decoder String
 budgetItemIdDecoder =
-    D.field "budgetItemId" D.string
+    D.field "parent" D.string
 
 
 costDecoder : D.Decoder Int
@@ -43,11 +44,19 @@ encoder : Transaction -> E.Value
 encoder x =
     E.object
         [ ( "id", E.string x.id )
-        , ( "budgetItemId", E.string x.budgetItemId )
+        , ( "parent", E.string x.parent )
         , ( "cost", E.int x.cost )
         ]
 
 
 transactionsFor : List Transaction -> { a | id : String } -> List Transaction
 transactionsFor transactions items =
-    List.filter (\x -> x.budgetItemId == items.id) transactions
+    List.filter (\x -> x.parent == items.id) transactions
+
+
+create : List Transaction -> String -> Int -> Transaction
+create transactions parentId value =
+    { id = Util.getNextId transactions
+    , parent = parentId
+    , cost = value
+    }
