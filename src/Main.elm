@@ -8,6 +8,7 @@ import Html.Events exposing (..)
 import Json.Decode as D
 import Json.Encode as E
 import Transaction
+import Util
 
 
 type alias Model =
@@ -69,22 +70,6 @@ type Msg
     | AddTransaction String Int
 
 
-type alias Idly a =
-    { a | id : String }
-
-
-updateById : String -> (Idly a -> Idly a) -> List (Idly a) -> List (Idly a)
-updateById id getNewItem list =
-    List.map
-        (\x ->
-            if x.id == id then
-                getNewItem x
-            else
-                x
-        )
-        list
-
-
 serializeModel : Model -> E.Value
 serializeModel model =
     E.object
@@ -126,27 +111,31 @@ update msg model =
 
         ChangeItemName item value ->
             let
+                updateName =
+                    Util.updateById (\x -> { x | name = value })
+
                 newModel =
-                    { model
-                        | items =
-                            updateById
-                                item.id
-                                (\x -> { x | name = value })
-                                model.items
-                    }
+                    { model | items = updateName item.id model.items }
             in
             ( newModel, portOutOfElm <| serializeModel newModel )
 
         ChangeItemCost item cost ->
             let
+                updateCost =
+                    Util.updateById (\x -> { x | cost = cost })
+
                 newModel =
-                    { model
-                        | items =
-                            updateById
-                                item.id
-                                (\x -> { x | cost = cost })
-                                model.items
-                    }
+                    { model | items = updateCost item.id model.items }
+            in
+            ( newModel, portOutOfElm <| serializeModel newModel )
+
+        ChangeTransactionCost transaction cost ->
+            let
+                updateCost =
+                    Util.updateById (\x -> { x | cost = cost })
+
+                newModel =
+                    { model | transactions = updateCost transaction.id model.transactions }
             in
             ( newModel, portOutOfElm <| serializeModel newModel )
 
@@ -155,9 +144,7 @@ update msg model =
                 newModel =
                     { model
                         | items =
-                            List.filter
-                                (\x -> item /= x)
-                                model.items
+                            List.filter (\x -> item /= x) model.items
                     }
             in
             ( newModel, portOutOfElm <| serializeModel newModel )
@@ -165,31 +152,14 @@ update msg model =
         -- TODO: Remove empty rows
         -- TODO: Validate rows
         Commit ->
-            ( { model | commited = True }
-            , Cmd.none
-            )
+            ( { model | commited = True }, Cmd.none )
 
         RemoveTransaction transaction ->
             let
                 newModel =
                     { model
                         | transactions =
-                            List.filter
-                                (\x -> x.id /= transaction.id)
-                                model.transactions
-                    }
-            in
-            ( newModel, portOutOfElm <| serializeModel newModel )
-
-        ChangeTransactionCost transaction cost ->
-            let
-                newModel =
-                    { model
-                        | transactions =
-                            updateById
-                                transaction.id
-                                (\x -> { x | cost = cost })
-                                model.transactions
+                            List.filter (\x -> x.id /= transaction.id) model.transactions
                     }
             in
             ( newModel, portOutOfElm <| serializeModel newModel )
@@ -237,10 +207,7 @@ viewRow : List (Html Msg) -> Html Msg
 viewRow cells =
     div
         [ toClassList "flex" ]
-        (List.map
-            (\x -> viewCell [ x ])
-            cells
-        )
+        (List.map (\x -> viewCell [ x ]) cells)
 
 
 viewBugetItem : BudgetItem.T -> Html Msg
@@ -320,10 +287,7 @@ viewTransactionItem transaction =
 viewCommitedBudgetItem : Int -> BudgetItem.T -> List Transaction.T -> Html Msg
 viewCommitedBudgetItem newTransValue item transactions =
     let
-        transSum =
-            sumItems transactions
-
-        transCols =
+        transactionsColumns =
             List.map
                 viewTransactionItem
                 transactions
@@ -331,9 +295,9 @@ viewCommitedBudgetItem newTransValue item transactions =
     viewRow
         ([ div [] [ text item.name ]
          , div [] [ text (String.fromInt item.cost) ]
-         , viewStyledTotalBasic item.cost transSum
+         , viewStyledTotalBasic item.cost <| Util.sumItems transactions
          ]
-            ++ transCols
+            ++ transactionsColumns
             ++ [ input
                     [ placeholder "+"
                     , onInput
@@ -350,14 +314,6 @@ viewCommitedBudgetItem newTransValue item transactions =
                     []
                ]
         )
-
-
-sumItems : List { a | cost : Int } -> Int
-sumItems items =
-    List.foldl
-        (\current accumulator -> current.cost + accumulator)
-        0
-        items
 
 
 viewUncommitted : Model -> Html Msg
@@ -377,7 +333,7 @@ viewUncommitted model =
                 ]
                 [ text "Add" ]
             , div [ toClassList "text-right text-xl" ]
-                [ text <| String.fromInt <| sumItems model.items ]
+                [ text <| String.fromInt <| Util.sumItems model.items ]
             , button
                 [ onClick Commit
                 , toClassList "bg-indigo font-bold px-4 py-2 rounded text-white"
@@ -394,7 +350,7 @@ viewCommitted model =
             Transaction.transactionsFor model.transactions
 
         budgetSum =
-            sumItems model.items
+            Util.sumItems model.items
     in
     div []
         [ div
@@ -411,7 +367,7 @@ viewCommitted model =
         , viewRow
             [ div [] []
             , div [ toClassList "text-xl" ] [ text <| String.fromInt budgetSum ]
-            , viewStyledTotal "text-xl" budgetSum <| sumItems model.transactions
+            , viewStyledTotal "text-xl" budgetSum <| Util.sumItems model.transactions
             ]
         ]
 

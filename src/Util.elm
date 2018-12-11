@@ -19,3 +19,27 @@ getNextId list =
 
                 Just int ->
                     String.fromInt (int + 1)
+
+
+sumItems : List { a | cost : Int } -> Int
+sumItems items =
+    List.foldl
+        (\current accumulator -> current.cost + accumulator)
+        0
+        items
+
+
+type alias Idly a =
+    { a | id : String }
+
+
+updateById : (Idly a -> Idly a) -> String -> List (Idly a) -> List (Idly a)
+updateById getNewItem id list =
+    List.map
+        (\x ->
+            if x.id == id then
+                getNewItem x
+            else
+                x
+        )
+        list
