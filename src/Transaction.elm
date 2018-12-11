@@ -1,11 +1,11 @@
-module Transaction exposing (..)
+module Transaction exposing (T, create, encoder, transactionsDecoder, transactionsFor)
 
 import Json.Decode as D
 import Json.Encode as E
 import Util
 
 
-type alias Transaction =
+type alias T =
     { id : String
     , parent : String
     , cost : Int
@@ -27,20 +27,20 @@ costDecoder =
     D.field "cost" D.int
 
 
-decoder : D.Decoder Transaction
+decoder : D.Decoder T
 decoder =
-    D.map3 Transaction
+    D.map3 T
         idDecoder
         budgetItemIdDecoder
         costDecoder
 
 
-transactionsDecoder : D.Decoder (List Transaction)
+transactionsDecoder : D.Decoder (List T)
 transactionsDecoder =
     D.field "transactions" (D.list decoder)
 
 
-encoder : Transaction -> E.Value
+encoder : T -> E.Value
 encoder x =
     E.object
         [ ( "id", E.string x.id )
@@ -49,12 +49,12 @@ encoder x =
         ]
 
 
-transactionsFor : List Transaction -> { a | id : String } -> List Transaction
+transactionsFor : List T -> { a | id : String } -> List T
 transactionsFor transactions items =
     List.filter (\x -> x.parent == items.id) transactions
 
 
-create : List Transaction -> String -> Int -> Transaction
+create : List T -> String -> Int -> T
 create transactions parentId value =
     { id = Util.getNextId transactions
     , parent = parentId

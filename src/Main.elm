@@ -8,21 +8,20 @@ import Html.Events exposing (..)
 import Json.Decode as D
 import Json.Encode as E
 import Transaction
-import Util
 
 
 type alias Model =
-    { items : List BudgetItem.BudgetItem
+    { items : List BudgetItem.T
     , commited : Bool
-    , transactions : List Transaction.Transaction
+    , transactions : List Transaction.T
     , newTransactionValue : Int
     , debug : String
     }
 
 
 type alias State =
-    { items : List BudgetItem.BudgetItem
-    , transactions : List Transaction.Transaction
+    { items : List BudgetItem.T
+    , transactions : List Transaction.T
     }
 
 
@@ -60,12 +59,12 @@ type Msg
     = Noop
     | GotValueFromJS E.Value
     | AddItem
-    | ChangeItemName BudgetItem.BudgetItem String
-    | ChangeItemCost BudgetItem.BudgetItem Int
-    | DeleteItem BudgetItem.BudgetItem
+    | ChangeItemName BudgetItem.T String
+    | ChangeItemCost BudgetItem.T Int
+    | DeleteItem BudgetItem.T
     | Commit
-    | RemoveTransaction Transaction.Transaction
-    | ChangeTransactionCost Transaction.Transaction Int
+    | RemoveTransaction Transaction.T
+    | ChangeTransactionCost Transaction.T Int
     | ChangeNewTransactionValue Int
     | AddTransaction String Int
 
@@ -98,9 +97,7 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Noop ->
-            ( model
-            , Cmd.none
-            )
+            ( model, Cmd.none )
 
         GotValueFromJS val ->
             case D.decodeValue stateDecoder val of
@@ -120,10 +117,7 @@ update msg model =
         AddItem ->
             let
                 item =
-                    { id = Util.getNextId model.items
-                    , name = ""
-                    , cost = 0
-                    }
+                    BudgetItem.create model.items
 
                 newModel =
                     { model | items = model.items ++ [ item ] }
@@ -249,7 +243,7 @@ viewRow cells =
         )
 
 
-viewBugetItem : BudgetItem.BudgetItem -> Html Msg
+viewBugetItem : BudgetItem.T -> Html Msg
 viewBugetItem item =
     viewRow
         [ input
@@ -300,7 +294,7 @@ viewStyledTotalBasic base value =
     viewStyledTotal "" base value
 
 
-viewTransactionItem : Transaction.Transaction -> Html Msg
+viewTransactionItem : Transaction.T -> Html Msg
 viewTransactionItem transaction =
     div []
         [ input
@@ -323,7 +317,7 @@ viewTransactionItem transaction =
         ]
 
 
-viewCommitedBudgetItem : Int -> BudgetItem.BudgetItem -> List Transaction.Transaction -> Html Msg
+viewCommitedBudgetItem : Int -> BudgetItem.T -> List Transaction.T -> Html Msg
 viewCommitedBudgetItem newTransValue item transactions =
     let
         transSum =
