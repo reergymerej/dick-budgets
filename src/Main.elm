@@ -169,6 +169,26 @@ serializeModel model =
         ]
 
 
+getLastItem : List a -> Maybe a
+getLastItem list =
+    List.head <| List.reverse list
+
+
+getNextId : List { a | id : String } -> String
+getNextId list =
+    case getLastItem list of
+        Nothing ->
+            "0"
+
+        Just item ->
+            case String.toInt item.id of
+                Nothing ->
+                    "0"
+
+                Just int ->
+                    String.fromInt (int + 1)
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
@@ -195,7 +215,7 @@ update msg model =
         AddItem ->
             let
                 item =
-                    { id = String.fromInt (List.length model.items)
+                    { id = getNextId model.items
                     , name = ""
                     , cost = 0
                     }
@@ -284,7 +304,7 @@ update msg model =
                         { model
                             | transactions =
                                 model.transactions
-                                    ++ [ { id = String.fromInt <| List.length model.transactions
+                                    ++ [ { id = getNextId model.transactions
                                          , budgetItemId = itemId
                                          , cost = value
                                          }
