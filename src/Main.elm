@@ -1,18 +1,12 @@
 port module Main exposing (main)
 
 import Browser
+import BudgetItem
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Json.Decode as D
 import Json.Encode as E
-
-
-type alias BudgetItem =
-    { id : String
-    , name : String
-    , cost : Int
-    }
 
 
 type alias Transaction =
@@ -23,7 +17,7 @@ type alias Transaction =
 
 
 type alias Model =
-    { items : List BudgetItem
+    { items : List BudgetItem.BudgetItem
     , commited : Bool
     , transactions : List Transaction
     , newTransactionValue : Int
@@ -31,45 +25,17 @@ type alias Model =
     }
 
 
-idDecoder : D.Decoder String
-idDecoder =
-    D.field "id" D.string
-
-
-nameDecoder : D.Decoder String
-nameDecoder =
-    D.field "name" D.string
-
-
-costDecoder : D.Decoder Int
-costDecoder =
-    D.field "cost" D.int
-
-
 budgetItemIdDecoder : D.Decoder String
 budgetItemIdDecoder =
     D.field "budgetItemId" D.string
 
 
-itemDecoder : D.Decoder BudgetItem
-itemDecoder =
-    D.map3 BudgetItem
-        idDecoder
-        nameDecoder
-        costDecoder
-
-
 transactionDecoder : D.Decoder Transaction
 transactionDecoder =
     D.map3 Transaction
-        idDecoder
+        BudgetItem.idDecoder
         budgetItemIdDecoder
-        costDecoder
-
-
-itemsDecoder : D.Decoder (List BudgetItem)
-itemsDecoder =
-    D.field "items" (D.list itemDecoder)
+        BudgetItem.costDecoder
 
 
 transactionsDecoder : D.Decoder (List Transaction)
@@ -78,7 +44,7 @@ transactionsDecoder =
 
 
 type alias State =
-    { items : List BudgetItem
+    { items : List BudgetItem.BudgetItem
     , transactions : List Transaction
     }
 
@@ -86,7 +52,7 @@ type alias State =
 stateDecoder : D.Decoder State
 stateDecoder =
     D.map2 State
-        itemsDecoder
+        BudgetItem.itemsDecoder
         transactionsDecoder
 
 
@@ -117,9 +83,9 @@ type Msg
     = Noop
     | GotValueFromJS E.Value
     | AddItem
-    | ChangeItemName BudgetItem String
-    | ChangeItemCost BudgetItem Int
-    | DeleteItem BudgetItem
+    | ChangeItemName BudgetItem.BudgetItem String
+    | ChangeItemCost BudgetItem.BudgetItem Int
+    | DeleteItem BudgetItem.BudgetItem
     | Commit
     | RemoveTransaction Transaction
     | ChangeTransactionCost Transaction Int
@@ -143,15 +109,6 @@ updateById id getNewItem list =
         list
 
 
-itemEncoder : BudgetItem -> E.Value
-itemEncoder x =
-    E.object
-        [ ( "id", E.string x.id )
-        , ( "name", E.string x.name )
-        , ( "cost", E.int x.cost )
-        ]
-
-
 transactionEncoder : Transaction -> E.Value
 transactionEncoder x =
     E.object
@@ -164,7 +121,7 @@ transactionEncoder x =
 serializeModel : Model -> E.Value
 serializeModel model =
     E.object
-        [ ( "items", E.list itemEncoder model.items )
+        [ ( "items", E.list BudgetItem.encoder model.items )
         , ( "transactions", E.list transactionEncoder model.transactions )
         ]
 
@@ -344,7 +301,7 @@ viewRow cells =
         )
 
 
-viewBugetItem : BudgetItem -> Html Msg
+viewBugetItem : BudgetItem.BudgetItem -> Html Msg
 viewBugetItem item =
     viewRow
         [ input
@@ -418,7 +375,7 @@ viewTransactionItem transaction =
         ]
 
 
-viewCommitedBudgetItem : Int -> BudgetItem -> List Transaction -> Html Msg
+viewCommitedBudgetItem : Int -> BudgetItem.BudgetItem -> List Transaction -> Html Msg
 viewCommitedBudgetItem newTransValue item transactions =
     let
         transSum =
@@ -488,7 +445,7 @@ viewUncommitted model =
         ]
 
 
-transactionsFor : List Transaction -> BudgetItem -> List Transaction
+transactionsFor : List Transaction -> BudgetItem.BudgetItem -> List Transaction
 transactionsFor transactions budgetItem =
     List.filter (\x -> x.budgetItemId == budgetItem.id) transactions
 
